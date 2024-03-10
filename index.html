@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice To Text</title>
+    <link rel="stylesheet" href="https://unpkg.com/ionicons@5.5.2/dist/css/ionicons.min.css">
+    <link rel="icon" type="image/png" href="https://i.pinimg.com/736x/01/df/48/01df4848bfc0d3a3aecffa7285bb5a32.jpg">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .mic-button {
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        .text-container {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+        }
+
+        .mic-button.active ion-icon {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="mic-button">
+            <ion-icon name="mic-outline" style="font-size: 48px;"></ion-icon>
+        </button>
+        <div class="text-container" id="textContainer">...</div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const micButton = document.querySelector('.mic-button');
+    const textContainer = document.getElementById('textContainer');
+    let recognition;
+    let listening = false;
+    let accumulatedTranscript = ''; // Digunakan untuk menyimpan teks yang telah diakumulasikan
+
+    if (!('webkitSpeechRecognition' in window)) {
+        alert('Your browser does not support the Web Speech API. Please use Google Chrome or another compatible browser.');
+    } else {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            listening = true;
+            micButton.classList.add('active');
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error', event.error);
+        };
+
+        recognition.onend = function() {
+            listening = false;
+            micButton.classList.remove('active');
+        };
+
+        recognition.onresult = function(event) {
+            let finalTranscript = '';
+            let interimTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            // Hanya menambahkan finalTranscript ke accumulatedTranscript
+            if (finalTranscript !== '') {
+                accumulatedTranscript += finalTranscript + ' ';
+            }
+
+            // Memperbarui teks pada container dengan teks terakumulasi dan interim
+            textContainer.innerHTML = accumulatedTranscript + '<i style="color:#ddd;">' + interimTranscript + '</i>';
+        };
+    }
+
+    micButton.addEventListener('click', function() {
+        if (listening) {
+            recognition.stop();
+            return;
+        }
+        recognition.start();
+    }, false);
+});
+
+</script>
+
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</html>
+
